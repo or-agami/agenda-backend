@@ -5,9 +5,11 @@ const ObjectId = require('mongodb').ObjectId
 async function query(filterBy) {
     try {
         const criteria = _buildCriteria(filterBy)
-
+console.log('criteria from boardService:', criteria)
         const collection = await dbService.getCollection('board')
         var boards = await collection.find(criteria).toArray()
+        // var boards = await collection.find({}).toArray()
+        console.log('boards from boardService:', boards)
         return boards
     } catch (err) {
         logger.error('cannot find boards', err)
@@ -18,7 +20,9 @@ async function query(filterBy) {
 async function getById(boardId) {
     try {
         const collection = await dbService.getCollection('board')
-        const board = collection.findOne({ _id: ObjectId(boardId) })
+        console.log('boardId from boardService:', boardId)
+        const board = await collection.findOne({ _id: ObjectId(boardId) })
+        console.log('board from boardService:', board)
         return board
     } catch (err) {
         logger.error(`while finding board ${boardId}`, err)

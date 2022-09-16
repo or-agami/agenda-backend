@@ -27,13 +27,13 @@ const taskRoutes = require('./api/task/task.routes')
 
 const {setupSocketAPI} = require('./services/socket.service')
 const setupAsyncLocalStorage = require('./middlewares/setupAls.middleware')
-app.all('*', setupAsyncLocalStorage)
+// app.all('*', setupAsyncLocalStorage)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/board', boardRoutes)
 app.use('/api/task', taskRoutes)
-setupSocketAPI(http)
+// setupSocketAPI(http)
 
 
 app.get('/**', (req, res) => {
