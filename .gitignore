@@ -2,3 +2,4 @@
 /data
 /logs
 /config/prod.js
+/api/auth/secret.js
