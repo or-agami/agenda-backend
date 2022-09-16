@@ -5,8 +5,6 @@ const ObjectId = require('mongodb').ObjectId
 async function query(filterBy) {
     try {
         const criteria = _buildCriteria(filterBy)
-        // console.log('criteria:', criteria)
-        // const criteria = {}
 
         const collection = await dbService.getCollection('board')
         var boards = await collection.find(criteria).toArray()
@@ -82,10 +80,10 @@ async function addMsg(msg) {
 function _buildCriteria(filterBy) {
     const criteria = {}
     if (!filterBy) return criteria
-    if (filterBy.maxPrice && filterBy.maxPrice !== 0) criteria.price = { $lte: +filterBy.maxPrice }
-    if (filterBy.term) criteria.name = { $regex: filterBy.term, $options: 'i' }
-    if (filterBy.labels && filterBy.labels.length > 0) criteria.labels = { $all: filterBy.labels }
-    if (filterBy.inStock) criteria.inStock = { $eq: filterBy.inStock }
+    // if (filterBy.maxPrice && filterBy.maxPrice !== 0) criteria.price = { $lte: +filterBy.maxPrice }
+    // if (filterBy.term) criteria.name = { $regex: filterBy.term, $options: 'i' }
+    // if (filterBy.labels && filterBy.labels.length > 0) criteria.labels = { $all: filterBy.labels }
+    // if (filterBy.inStock) criteria.inStock = { $eq: filterBy.inStock }
     // if (filterBy.inStock) criteria.inStock = { $eq: (filterBy.inStock === 'true') }
     // if (filterBy.labels)
     return criteria
