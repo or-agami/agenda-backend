@@ -5,6 +5,7 @@ const boardService = require('../board/board.service')
 const socketService = require('../../services/socket.service')
 const taskService = require('./task.service')
 
+//?- GET LIST
 async function getTasks(req, res) {
     try {
         // const filterBy = (req.query) ? JSON.parse(req.query) : null
@@ -17,21 +18,21 @@ async function getTasks(req, res) {
     }
 }
 
-async function deleteTask(req, res) {
+//?- GET BY ID
+async function getTask(req, res) {
     try {
-        const deletedCount = await taskService.remove(req.params.id)
-        if (deletedCount === 1) {
-            res.send({ msg: 'Deleted successfully' })
-        } else {
-            res.status(400).send({ err: 'Cannot remove task' })
-        }
-    } catch (err) {
-        logger.error('Failed to delete task', err)
-        res.status(500).send({ err: 'Failed to delete task' })
+        logger.debug('Getting Task')
+        const { taskId } = req.params
+        const task = await taskService.getById(taskId)
+        res.json(task)
+    } catch (error) {
+        logger.error('Failed to get Task', error)
+        res.status(500).send({ err: 'Failed to get Task' })
     }
 }
 
 
+//?- CREATE
 async function addTask(req, res) {
 
     var loggedinUser = authService.validateToken(req.cookies.loginToken)
@@ -40,11 +41,11 @@ async function addTask(req, res) {
         var task = req.body
         task.byUserId = loggedinUser._id
         task = await taskService.add(task)
-        task.board = await boardService.getById(task.boardId)
+        task.task = await taskService.getById(task.taskId)
         task.user = await userService.getById(task.userId)
 
         delete task.userId
-        delete task.boardId
+        delete task.taskId
 
         // socketService.broadcast({type: 'task-added', data: task, userId: loggedinUser._id})
         // socketService.emitToUser({type: 'task-about-you', data: task, userId: task.aboutUserId})
@@ -60,8 +61,37 @@ async function addTask(req, res) {
     }
 }
 
+//?- UPDATE
+async function updateTask(req, res) {
+    try {
+        const task = req.body
+        const updatedTask = await taskService.update(task)
+        res.json(updatedTask)
+    } catch (error) {
+        logger.error('Failed to update Task', error)
+        res.status(500).send({ err: 'Failed to update Task' })
+    }
+}
+
+//?- DELETE
+async function deleteTask(req, res) {
+    try {
+        const deletedCount = await taskService.remove(req.params.id)
+        if (deletedCount === 1) {
+            res.send({ msg: 'Deleted successfully' })
+        } else {
+            res.status(400).send({ err: 'Cannot remove task' })
+        }
+    } catch (err) {
+        logger.error('Failed to delete task', err)
+        res.status(500).send({ err: 'Failed to delete task' })
+    }
+}
+
 module.exports = {
     getTasks,
+    getTask,
+    addTask,
+    updateTask,
     deleteTask,
-    addTask
 }

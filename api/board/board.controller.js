@@ -5,7 +5,6 @@ const logger = require('../../services/logger.service')
 async function getBoards(req, res) {
     try {
         logger.debug('Getting Boards')
-        // const filterBy = (req.query.params) ? JSON.parse(req.query.params) : null
         const filterBy = (req.query) ? req.query : null
         const boards = await boardService.query(filterBy)
         res.json(boards)
