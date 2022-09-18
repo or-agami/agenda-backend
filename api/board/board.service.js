@@ -1,5 +1,6 @@
 const dbService = require('../../services/db.service')
 const logger = require('../../services/logger.service')
+const utilService = require('../../services/util.service')
 const ObjectId = require('mongodb').ObjectId
 
 async function query(filterBy) {
@@ -39,11 +40,8 @@ async function remove(boardId) {
 async function add(board) {
     try {
         const collection = await dbService.getCollection('board')
-        board.inStock = true
-        board.createdAt = Date.now()
-        board.labels = []
-        board.img = 'board'
-        const addedBoard = await collection.insertOne(board)
+        board.groups = [{ id: utilService.makeId(), title: 'Group 1', tasks: [] }]
+        await collection.insertOne(board)
         return board
     } catch (err) {
         logger.error('cannot insert board', err)

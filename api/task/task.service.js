@@ -3,41 +3,87 @@ const logger = require('../../services/logger.service')
 const ObjectId = require('mongodb').ObjectId
 const asyncLocalStorage = require('../../services/als.service')
 
-async function query(filterBy = {}) {
+async function query(filterBy) {
     try {
         const criteria = _buildCriteria(filterBy)
         // const criteria = {}
-        const collection = await dbService.getCollection('task')
-        // var tasks = await collection.find(criteria).toArray()
+        const collection = await dbService.getCollection('board')
+        var tasks = await collection.find(criteria).toArray()
         // var tasks = await collection.find({}).toArray()
-        // console.log('collection:', collection)
+        console.log('collection:', collection)
         var tasks = await collection.aggregate([
+            // {
+            //     $match: criteria
+            // },
+            // {
+            //     $lookup:
+            //     {
+            //         localField: 'userId',
+            //         from: 'user',
+            //         foreignField: '_id',
+            //         as: 'user'
+            //     }
+            // },
+            // {
+            //     $unwind: '$user'
+            // },
+            // {
+            //     $lookup:
+            //     {
+            //         localField: 'boardId',
+            //         from: 'board',
+            //         foreignField: '_id',
+            //         as: 'board'
+            //     }
+            // },
+            // {
+            //     $unwind: '$board'
+            // }
             {
-                $match: criteria
-            },
-            {
-                $lookup:
-                {
-                    localField: 'userId',
-                    from: 'user',
-                    foreignField: '_id',
-                    as: 'user'
+                '$match': {
+                    'groups.tasks.id': {
+                        '$eq': 'c101'
+                    }
                 }
-            },
-            {
-                $unwind: '$user'
-            },
-            {
-                $lookup:
-                {
-                    localField: 'boardId',
-                    from: 'board',
-                    foreignField: '_id',
-                    as: 'board'
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'tasks': {
+                        '$filter': {
+                            'input': '$groups.tasks',
+                            'as': 'tasks',
+                            'cond': {
+                                '$in': [
+                                    'c101', '$$tasks.id'
+                                ]
+                            },
+                            'limit': 1
+                        }
+                    }
                 }
-            },
-            {
-                $unwind: '$board'
+            }, {
+                '$unwind': {
+                    'path': '$tasks'
+                }
+            }, {
+                '$project': {
+                    'task': {
+                        '$filter': {
+                            'input': '$tasks',
+                            'as': 'task',
+                            'cond': {
+                                '$eq': [
+                                    'c101', '$$task.id'
+                                ]
+                            },
+                            'limit': 1
+                        }
+                    }
+                }
+            }, {
+                '$unwind': {
+                    'path': '$task'
+                }
             }
         ]).toArray()
         tasks = tasks.map(task => {
@@ -92,9 +138,9 @@ function _buildCriteria(filterBy) {
     const criteria = {}
     console.log('filterBy from taskService:', filterBy)
     if (!filterBy) return criteria
-    if (filterBy.byBoardId) criteria.boardId = ObjectId(filterBy.byBoardId)
-    if (filterBy.byUserId) criteria.userId = ObjectId(filterBy.byUserId)
-    if (filterBy.byTaskId) criteria._id = ObjectId(filterBy.byTaskId)
+    if (filterBy.boardId) criteria.boardId = ObjectId(filterBy.boardId)
+    if (filterBy.userId) criteria.userId = ObjectId(filterBy.userId)
+    if (filterBy.groupId) criteria.id = filterBy.groupId
     console.log('criteria:', criteria)
     return criteria
 }
@@ -105,4 +151,25 @@ module.exports = {
     add
 }
 
+// filter:
+// { groups: { tasks: { id: "c101"} } }
+// { groups: { $in: [tasks: { $in: [ id: "c101" ] } ] } }
+// { 'groups.tasks.id': { $eq: "c101" } } 👈
 
+// project:
+// { 'groups.tasks': 1, _id: 0 }
+// { 'groups.tasks': { $elemMatch: {id: "c101"} }, _id: 0 }
+//   groups: {
+//     $filter: {
+//         input: "$groups",
+//         as: "group",
+//         cond: { $eq: [ "$$group.tasks.id" , "c101"] }
+//       }
+//   }
+// task: { $filter: {
+//     input: '$groups.tasks',
+//     as: 'task',
+//     cond: {$in: ['c101', '$$task.id'] },
+//     limit: 1
+//   }
+// }

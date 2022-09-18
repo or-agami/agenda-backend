@@ -10,6 +10,7 @@ async function getTasks(req, res) {
     try {
         // const filterBy = (req.query) ? JSON.parse(req.query) : null
         const filterBy = (req.query) ? req.query : null
+        console.log('filterBy:', filterBy)
         const tasks = await taskService.query(filterBy)
         res.send(tasks)
     } catch (err) {
@@ -74,7 +75,7 @@ async function updateTask(req, res) {
 }
 
 //?- DELETE
-async function deleteTask(req, res) {
+async function removeTask(req, res) {
     try {
         const deletedCount = await taskService.remove(req.params.id)
         if (deletedCount === 1) {
@@ -93,5 +94,5 @@ module.exports = {
     getTask,
     addTask,
     updateTask,
-    deleteTask,
+    removeTask,
 }

@@ -5,6 +5,7 @@ async function login(req, res) {
     const { username, password } = req.body
     try {
         const user = await authService.login(username, password)
+        // console.log('user form authService:', user)
         const loginToken = authService.getLoginToken(user)
         logger.info('User login: ', user)
         res.cookie('loginToken', loginToken)
@@ -18,7 +19,7 @@ async function login(req, res) {
 async function signup(req, res) {
     try {
         const { username, password, fullname, assignments = [] } = req.body
-        const account = await authService.signup(username, password, fullname)
+        const account = await authService.signup(username, password, fullname, assignments)
         logger.debug(`auth.route - new account created: ` + JSON.stringify(account))
         const user = await authService.login(username, password)
         const loginToken = authService.getLoginToken(user)
