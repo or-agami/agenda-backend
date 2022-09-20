@@ -10,7 +10,7 @@ async function getTasks(req, res) {
     try {
         // const filterBy = (req.query) ? JSON.parse(req.query) : null
         const filterBy = (req.query) ? req.query : null
-        console.log('filterBy:', filterBy)
+        console.log('filterBy from taskController (getTasks):', filterBy)
         const tasks = await taskService.query(filterBy)
         res.send(tasks)
     } catch (err) {
@@ -24,6 +24,7 @@ async function getTask(req, res) {
     try {
         logger.debug('Getting Task')
         const { taskId } = req.params
+        console.log('taskId from taskController:', taskId)
         const task = await taskService.getById(taskId)
         res.json(task)
     } catch (error) {

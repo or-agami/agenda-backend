@@ -5,97 +5,31 @@ const asyncLocalStorage = require('../../services/als.service')
 
 async function query(filterBy) {
     try {
-        const criteria = _buildCriteria(filterBy)
-        // const criteria = {}
+        const aggregation = _buildTasksAggregation(filterBy)
         const collection = await dbService.getCollection('board')
-        var tasks = await collection.find(criteria).toArray()
-        // var tasks = await collection.find({}).toArray()
-        console.log('collection:', collection)
-        var tasks = await collection.aggregate([
-            // {
-            //     $match: criteria
-            // },
-            // {
-            //     $lookup:
-            //     {
-            //         localField: 'userId',
-            //         from: 'user',
-            //         foreignField: '_id',
-            //         as: 'user'
-            //     }
-            // },
-            // {
-            //     $unwind: '$user'
-            // },
-            // {
-            //     $lookup:
-            //     {
-            //         localField: 'boardId',
-            //         from: 'board',
-            //         foreignField: '_id',
-            //         as: 'board'
-            //     }
-            // },
-            // {
-            //     $unwind: '$board'
-            // }
-            {
-                '$match': {
-                    'groups.tasks.id': {
-                        '$eq': 'c101'
-                    }
-                }
-            }, {
-                '$project': {
-                    '_id': 0,
-                    'tasks': {
-                        '$filter': {
-                            'input': '$groups.tasks',
-                            'as': 'tasks',
-                            'cond': {
-                                '$in': [
-                                    'c101', '$$tasks.id'
-                                ]
-                            },
-                            'limit': 1
-                        }
-                    }
-                }
-            }, {
-                '$unwind': {
-                    'path': '$tasks'
-                }
-            }, {
-                '$project': {
-                    'task': {
-                        '$filter': {
-                            'input': '$tasks',
-                            'as': 'task',
-                            'cond': {
-                                '$eq': [
-                                    'c101', '$$task.id'
-                                ]
-                            },
-                            'limit': 1
-                        }
-                    }
-                }
-            }, {
-                '$unwind': {
-                    'path': '$task'
-                }
-            }
-        ]).toArray()
-        tasks = tasks.map(task => {
-            task.user = { _id: task.user._id, fullname: task.user.fullname }
-            task.board = { _id: task.board._id, name: task.board.name, price: task.board.price }
-            delete task.userId
-            delete task.boardId
-            return task
-        })
+        var tasks = await collection.aggregate(aggregation).toArray()
+        // var tasks = await collection.aggregate([{ '$project': { '_id': 0, 'groups': 1 } },
+        // { '$unwind': { 'path': '$groups' } },
+        // { '$project': { 'tasks': '$groups.tasks' } },
+        // { '$unwind': { 'path': '$tasks' } }]).toArray()
+        console.log('tasks from taskService (post):', tasks)
         return tasks
     } catch (err) {
         logger.error('cannot find tasks', err)
+        throw err
+    }
+
+}
+
+async function getById(taskId) {
+    try {
+        const aggregation = _buildTaskIdAggregation(taskId)
+        const collection = await dbService.getCollection('board')
+        const [{ task }] = await collection.aggregate(aggregation).toArray()
+        console.log('task:', task)
+        return task
+    } catch (err) {
+        logger.error('cannot find task', err)
         throw err
     }
 
@@ -134,21 +68,97 @@ async function add(task) {
     }
 }
 
-function _buildCriteria(filterBy) {
-    const criteria = {}
-    console.log('filterBy from taskService:', filterBy)
-    if (!filterBy) return criteria
-    if (filterBy.boardId) criteria.boardId = ObjectId(filterBy.boardId)
-    if (filterBy.userId) criteria.userId = ObjectId(filterBy.userId)
-    if (filterBy.groupId) criteria.id = filterBy.groupId
-    console.log('criteria:', criteria)
-    return criteria
-}
-
 module.exports = {
     query,
+    getById,
     remove,
     add
+}
+
+// function _buildCriteria(filterBy) {
+//     const criteria = {}
+//     console.log('filterBy from taskService:', filterBy)
+//     if (!filterBy) return criteria
+//     if (filterBy.boardId) criteria.boardId = ObjectId(filterBy.boardId)
+//     if (filterBy.userId) criteria.userId = ObjectId(filterBy.userId)
+//     if (filterBy.groupId) criteria.id = filterBy.groupId
+//     console.log('criteria:', criteria)
+//     return criteria
+// }
+
+function _buildTasksAggregation(filterBy) {
+    // const criteria = {}
+    let aggregation = []
+    console.log('filterBy from taskService:', filterBy)
+
+    if (filterBy?.boardId) aggregation.push(
+        { '$match': { '_id': { '$eq': ObjectId(filterBy.boardId) } } }
+    )
+
+    aggregation.push(
+        { '$project': { '_id': 0, 'groups': 1 } },
+        { '$unwind': { 'path': '$groups' } },
+        { '$project': { 'tasks': '$groups.tasks' } },
+        { '$unwind': { 'path': '$tasks' } }
+    )
+
+    if (filterBy?.userId) aggregation.push(
+        { '$match': { 'tasks.memberIds': { '$in': [filterBy.userId, 'tasks.memberIds'] } } }
+    )
+
+    aggregation.push({ '$replaceRoot': { 'newRoot': '$tasks' } })
+    return aggregation
+}
+
+function _buildTaskIdAggregation(taskId) {
+    return [
+        {
+            '$match': {
+                'groups.tasks.id': {
+                    '$eq': taskId
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 0,
+                'tasks': {
+                    '$filter': {
+                        'input': '$groups.tasks',
+                        'as': 'tasks',
+                        'cond': {
+                            '$in': [
+                                `${taskId}`, '$$tasks.id'
+                            ]
+                        },
+                        'limit': 1
+                    }
+                }
+            }
+        }, {
+            '$unwind': {
+                'path': '$tasks'
+            }
+        }, {
+            '$project': {
+                'task': {
+                    '$filter': {
+                        'input': '$tasks',
+                        'as': 'task',
+                        'cond': {
+                            '$eq': [
+                                `${taskId}`, '$$task.id'
+                            ]
+                        },
+                        'limit': 1
+                    }
+                }
+            }
+        }, {
+            '$unwind': {
+                'path': '$task'
+            }
+        }
+    ]
 }
 
 // filter:
