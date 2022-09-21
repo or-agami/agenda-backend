@@ -45,27 +45,10 @@ async function remove(taskId) {
     }
 }
 
-async function add(task) {
-    try {
-        const taskToAdd = {
-            userId: ObjectId(task.byUserId),
-            boardId: ObjectId(task.byBoardId),
-            content: task.content
-        }
-        const collection = await dbService.getCollection('task')
-        await collection.insertOne(taskToAdd)
-        return taskToAdd
-    } catch (err) {
-        logger.error('cannot insert task', err)
-        throw err
-    }
-}
-
 module.exports = {
     query,
     getById,
     remove,
-    add
 }
 
 function _buildTasksAggregation(filterBy) {
