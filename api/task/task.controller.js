@@ -1,14 +1,12 @@
 const logger = require('../../services/logger.service')
 const authService = require('../auth/auth.service')
 const userService = require('../user/user.service')
-const boardService = require('../board/board.service')
 const socketService = require('../../services/socket.service')
 const taskService = require('./task.service')
 
 //?- GET LIST
 async function getTasks(req, res) {
     try {
-        // const filterBy = (req.query) ? JSON.parse(req.query) : null
         const filterBy = (req.query) ? req.query : null
         console.log('filterBy from taskController (getTasks):', filterBy)
         const tasks = await taskService.query(filterBy)

@@ -1,7 +1,8 @@
 const bcrypt = require('bcrypt')
 const userService = require('../user/user.service')
 const logger = require('../../services/logger.service')
-const cryptr = require('./secret')
+const Cryptr = require('cryptr')
+const cryptr = new Cryptr(process.env.CRYPTR_SECRET)
 
 
 async function login(username, password) {

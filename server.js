@@ -2,6 +2,7 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const path = require('path')
+require('dotenv').config()
 
 const app = express()
 const http = require('http').createServer(app)
@@ -39,9 +40,8 @@ setupSocketAPI(http)
 app.get('/**', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 })
-
 const logger = require('./services/logger.service')
-const port = process.env.PORT || 3030
+const port = process.env.PORT
 http.listen(port, () => {
     logger.info('Server is running on port: ' + port)
 })

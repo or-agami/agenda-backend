@@ -11,7 +11,9 @@ function setupSocketAPI(http) {
     })
     gIo.on('connection', socket => {
         logger.info(`New connected socket [id: ${socket.id}]`)
-        socket.on('disconnect', socket => {
+        console.log('socket:', socket)
+        socket.on('disconnect', () => {
+            console.log('socket:', socket)
             logger.info(`Socket disconnected [id: ${socket.id}]`)
         })
         socket.on('chat-set-topic', topic => {
