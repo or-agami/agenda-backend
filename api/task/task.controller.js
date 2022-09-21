@@ -8,7 +8,6 @@ const taskService = require('./task.service')
 async function getTasks(req, res) {
     try {
         const filterBy = (req.query) ? req.query : null
-        console.log('filterBy from taskController (getTasks):', filterBy)
         const tasks = await taskService.query(filterBy)
         res.send(tasks)
     } catch (err) {

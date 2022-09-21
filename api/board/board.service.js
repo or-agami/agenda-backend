@@ -40,6 +40,7 @@ async function remove(boardId) {
 async function add(board) {
     try {
         const collection = await dbService.getCollection('board')
+        board.cmpsOrder = ["member", "status", "priority", "timeline", "attachments"]
         board.groups = [{ id: utilService.makeId(), title: 'Group 1', tasks: [] }]
         await collection.insertOne(board)
         return board
