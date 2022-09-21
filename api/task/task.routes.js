@@ -7,15 +7,7 @@ const router = express.Router()
 // middleware that is specific to this router
 // router.use(requireAuth)
 
-router.get('/', getTasks)
-// router.get('/', log, getTasks)
-router.get('/:taskId', getTask)
-// router.get('/:taskId', log, getTask)
-router.post('/', addTask)
-// router.post('/',log, requireAuth, addTask)
-router.put('/:taskId', updateTask)
-// router.put('/:taskId',log, requireAuth, updateTask)
-router.delete('/:taskId', removeTask)
-// router.delete('/:taskId', requireAuth, requireAdmin, removeTask)
+router.get('/', log, getTasks)
+router.get('/:taskId', log, getTask)
 
 module.exports = router

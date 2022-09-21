@@ -29,26 +29,9 @@ async function getById(taskId) {
     }
 }
 
-async function remove(taskId) {
-    try {
-        const store = asyncLocalStorage.getStore()
-        const { loggedinUser } = store
-        const collection = await dbService.getCollection('task')
-        // remove only if user is owner/admin
-        const criteria = { _id: ObjectId(taskId) }
-        if (!loggedinUser?.isAdmin) criteria.userId = ObjectId(loggedinUser._id)
-        const { deletedCount } = await collection.deleteOne(criteria)
-        return deletedCount
-    } catch (err) {
-        logger.error(`cannot remove task ${taskId}`, err)
-        throw err
-    }
-}
-
 module.exports = {
     query,
     getById,
-    remove,
 }
 
 function _buildTasksAggregation(filterBy) {
@@ -85,40 +68,3 @@ function _buildTaskIdAggregation(taskId) {
     ]
     return aggregation
 }
-
-// function _buildTaskIdAggregation(taskId) {
-//     return [
-//         { '$match': { 'groups.tasks.id': { '$eq': taskId } } },
-//         {
-//             '$project': {
-//                 '_id': 0,
-//                 'tasks': {
-//                     '$filter': {
-//                         'input': '$groups.tasks',
-//                         'as': 'tasks',
-//                         'cond': {
-//                             '$in': [`${taskId}`, '$$tasks.id']
-//                         },
-//                         'limit': 1
-//                     }
-//                 }
-//             }
-//         },
-//         { '$unwind': { 'path': '$tasks' } },
-//         {
-//             '$project': {
-//                 'task': {
-//                     '$filter': {
-//                         'input': '$tasks',
-//                         'as': 'task',
-//                         'cond': {
-//                             '$eq': [`${taskId}`, '$$task.id']
-//                         },
-//                         'limit': 1
-//                     }
-//                 }
-//             }
-//         },
-//         { '$unwind': { 'path': '$task' } }
-//     ]
-// }
