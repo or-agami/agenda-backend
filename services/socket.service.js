@@ -16,6 +16,25 @@ function setupSocketAPI(http) {
             // console.log('socket:', socket)
             logger.info(`Socket disconnected [id: ${socket.id}]`)
         })
+        socket.on('board-set-channel', topic => {
+            console.log('topic:', topic)
+            if (socket.myTopic === topic) return
+            if (socket.myTopic) {
+                socket.leave(socket.myTopic)
+                logger.info(`Socket is leaving topic ${socket.myTopic} [id: ${socket.id}]`)
+            }
+            socket.join(topic)
+            socket.myTopic = topic
+            logger.debug(`Socket is joining topic ${socket.myTopic} [id: ${socket.id}]`)
+        })
+        socket.on('board-send-changes', board => {
+            logger.info(`Board changes from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
+            // emits to all sockets:
+            // gIo.emit('chat addMsg', activity)
+            // emits only to sockets in the same room
+            gIo.to(socket.myTopic).emit('board-add-changes', board)
+            // boardService.addMsg(activity)
+        })
         socket.on('task-set-channel', topic => {
             console.log('topic:', topic)
             if (socket.myTopic === topic) return
@@ -25,6 +44,7 @@ function setupSocketAPI(http) {
             }
             socket.join(topic)
             socket.myTopic = topic
+            logger.debug(`Socket is joining topic ${socket.myTopic} [id: ${socket.id}]`)
         })
         socket.on('task-send-comment', msg => {
             logger.info(`New chat msg from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
@@ -32,7 +52,7 @@ function setupSocketAPI(http) {
             // gIo.emit('chat addMsg', msg)
             // emits only to sockets in the same room
             gIo.to(socket.myTopic).emit('task-add-comment', msg)
-            boardService.addMsg(msg)
+            // boardService.addMsg(msg)
         })
         socket.on('task-send-activity', activity => {
             logger.info(`New chat activity from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
@@ -40,7 +60,7 @@ function setupSocketAPI(http) {
             // gIo.emit('chat addMsg', activity)
             // emits only to sockets in the same room
             gIo.to(socket.myTopic).emit('task-add-activity', activity)
-            boardService.addMsg(activity)
+            // boardService.addMsg(activity)
         })
         socket.on('set-user-socket', userId => {
             logger.info(`Setting socket.userId = ${userId} for socket [id: ${socket.id}]`)
