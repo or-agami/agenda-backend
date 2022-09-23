@@ -1,6 +1,17 @@
 const authService = require('./auth.service')
 const logger = require('../../services/logger.service')
 
+async function verifyUsername(req, res) {
+        const {username} = req.query
+    try {
+        const isVerified = await authService.verifyUsername(username)
+        res.send(isVerified)
+    } catch (err) {
+        logger.error(`User was not verify ${username}` + err)
+        res.status(401).send({ err: 'Failed to verify' })
+    }
+}
+
 async function login(req, res) {
     const { username, password } = req.body
     try {
@@ -42,6 +53,7 @@ async function logout(req, res) {
 }
 
 module.exports = {
+    verifyUsername,
     login,
     signup,
     logout
