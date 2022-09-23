@@ -30,6 +30,7 @@ async function getBoard(req, res) {
 //?- CREATE
 async function addBoard(req, res) {
     try {
+        logger.debug('Adding board')
         const board = req.body
         const addedBoard = await boardService.add(board)
         res.json(addedBoard)
@@ -42,6 +43,7 @@ async function addBoard(req, res) {
 //?- UPDATE
 async function updateBoard(req, res) {
     try {
+        logger.debug('Updating board')
         const board = req.body
         const updatedBoard = await boardService.update(board)
         res.json(updatedBoard)
@@ -54,6 +56,7 @@ async function updateBoard(req, res) {
 //?- DELETE
 async function removeBoard(req, res) {
     try {
+        logger.debug('Removing board')
         const { boardId } = req.params
         const removedBoard = await boardService.remove(boardId)
         res.json(removedBoard)
