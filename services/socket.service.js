@@ -11,12 +11,12 @@ function setupSocketAPI(http) {
     })
     gIo.on('connection', socket => {
         logger.info(`New connected socket [id: ${socket.id}]`)
-        console.log('socket:', socket)
+        // console.log('socket:', socket)
         socket.on('disconnect', () => {
-            console.log('socket:', socket)
+            // console.log('socket:', socket)
             logger.info(`Socket disconnected [id: ${socket.id}]`)
         })
-        socket.on('chat-set-topic', topic => {
+        socket.on('task-set-channel', topic => {
             console.log('topic:', topic)
             if (socket.myTopic === topic) return
             if (socket.myTopic) {
@@ -26,13 +26,21 @@ function setupSocketAPI(http) {
             socket.join(topic)
             socket.myTopic = topic
         })
-        socket.on('chat-send-msg', msg => {
+        socket.on('task-send-comment', msg => {
             logger.info(`New chat msg from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
             // emits to all sockets:
             // gIo.emit('chat addMsg', msg)
             // emits only to sockets in the same room
-            gIo.to(socket.myTopic).emit('chat-add-msg', msg)
+            gIo.to(socket.myTopic).emit('task-add-comment', msg)
             boardService.addMsg(msg)
+        })
+        socket.on('task-send-activity', activity => {
+            logger.info(`New chat activity from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
+            // emits to all sockets:
+            // gIo.emit('chat addMsg', activity)
+            // emits only to sockets in the same room
+            gIo.to(socket.myTopic).emit('task-add-activity', activity)
+            boardService.addMsg(activity)
         })
         socket.on('set-user-socket', userId => {
             logger.info(`Setting socket.userId = ${userId} for socket [id: ${socket.id}]`)
