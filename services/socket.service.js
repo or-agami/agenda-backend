@@ -11,57 +11,42 @@ function setupSocketAPI(http) {
     })
     gIo.on('connection', socket => {
         logger.info(`New connected socket [id: ${socket.id}]`)
-        // console.log('socket:', socket)
         socket.on('disconnect', () => {
-            // console.log('socket:', socket)
             logger.info(`Socket disconnected [id: ${socket.id}]`)
         })
-        socket.on('board-set-channel', topic => {
-            console.log('topic:', topic)
-            if (socket.myTopic === topic) return
-            if (socket.myTopic) {
-                socket.leave(socket.myTopic)
-                logger.info(`Socket is leaving topic ${socket.myTopic} [id: ${socket.id}]`)
+
+        socket.on('board-set-channel', channel => {
+            console.log('channel:', channel)
+            if (socket.boardChannel === channel) return
+            if (socket.boardChannel) {
+                socket.leave(socket.boardChannel)
+                logger.info(`Socket is leaving channel ${socket.boardChannel} [id: ${socket.id}]`)
             }
-            socket.join(topic)
-            socket.myTopic = topic
-            logger.debug(`Socket is joining topic ${socket.myTopic} [id: ${socket.id}]`)
+            socket.join(channel)
+            socket.boardChannel = channel
+            logger.debug(`Socket is joining channel ${socket.boardChannel} [id: ${socket.id}]`)
         })
         socket.on('board-send-changes', board => {
-            logger.info(`Board changes from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
-            // emits to all sockets:
-            // gIo.emit('chat addMsg', activity)
-            // emits only to sockets in the same room
-            gIo.to(socket.myTopic).emit('board-add-changes', board)
-            // boardService.addMsg(activity)
+            logger.info(`Board changes from socket [id: ${socket.id}], emitting to topic ${socket.boardChannel}`)
+            gIo.to(socket.boardChannel).emit('board-add-changes', board)
         })
-        socket.on('task-set-channel', topic => {
-            console.log('topic:', topic)
-            if (socket.myTopic === topic) return
-            if (socket.myTopic) {
-                socket.leave(socket.myTopic)
-                logger.info(`Socket is leaving topic ${socket.myTopic} [id: ${socket.id}]`)
+
+        socket.on('task-set-channel', channel => {
+            console.log('channel:', channel)
+            if (socket.taskChannel === channel) return
+            if (socket.taskChannel) {
+                socket.leave(socket.taskChannel)
+                logger.info(`Socket is leaving channel ${socket.taskChannel} [id: ${socket.id}]`)
             }
-            socket.join(topic)
-            socket.myTopic = topic
-            logger.debug(`Socket is joining topic ${socket.myTopic} [id: ${socket.id}]`)
+            socket.join(channel)
+            socket.taskChannel = channel
+            logger.debug(`Socket is joining channel ${socket.taskChannel} [id: ${socket.id}]`)
         })
-        socket.on('task-send-comment', msg => {
-            logger.info(`New chat msg from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
-            // emits to all sockets:
-            // gIo.emit('chat addMsg', msg)
-            // emits only to sockets in the same room
-            gIo.to(socket.myTopic).emit('task-add-comment', msg)
-            // boardService.addMsg(msg)
+        socket.on('task-send-changes', task => {
+            logger.info(`New chat task from socket [id: ${socket.id}], emitting to topic ${socket.taskChannel}`)
+            gIo.to(socket.taskChannel).emit('task-add-changes', task)
         })
-        socket.on('task-send-activity', activity => {
-            logger.info(`New chat activity from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
-            // emits to all sockets:
-            // gIo.emit('chat addMsg', activity)
-            // emits only to sockets in the same room
-            gIo.to(socket.myTopic).emit('task-add-activity', activity)
-            // boardService.addMsg(activity)
-        })
+
         socket.on('set-user-socket', userId => {
             logger.info(`Setting socket.userId = ${userId} for socket [id: ${socket.id}]`)
             socket.userId = userId
@@ -88,12 +73,9 @@ async function emitToUser({ type, data, userId }) {
         socket.emit(type, data)
     } else {
         logger.info(`No active socket for user: ${userId}`)
-        // _printSockets()
     }
 }
 
-// If possible, send to all sockets BUT not the current socket 
-// Optionally, broadcast to a room / to all
 async function broadcast({ type, data, room = null, userId }) {
     userId = userId?.toString()
 
@@ -121,7 +103,6 @@ async function _getUserSocket(userId) {
 }
 
 async function _getAllSockets() {
-    // return all Socket instances
     const sockets = await gIo.fetchSockets()
     return sockets
 }
