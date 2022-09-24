@@ -16,7 +16,6 @@ function setupSocketAPI(http) {
         })
 
         socket.on('board-set-channel', channel => {
-            console.log('channel:', channel)
             if (socket.boardChannel === channel) return
             if (socket.boardChannel) {
                 socket.leave(socket.boardChannel)
@@ -32,7 +31,6 @@ function setupSocketAPI(http) {
         })
 
         socket.on('task-set-channel', channel => {
-            console.log('channel:', channel)
             if (socket.taskChannel === channel) return
             if (socket.taskChannel) {
                 socket.leave(socket.taskChannel)
