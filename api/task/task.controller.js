@@ -21,7 +21,6 @@ async function getTask(req, res) {
     try {
         logger.debug('Getting Task')
         const { taskId } = req.params
-        console.log('taskId from taskController:', taskId)
         const task = await taskService.getById(taskId)
         res.json(task)
     } catch (error) {

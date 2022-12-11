@@ -3,12 +3,12 @@ const logger = require('../../services/logger.service')
 const ObjectId = require('mongodb').ObjectId
 const asyncLocalStorage = require('../../services/als.service')
 
+// Get tasks by user or by board
 async function query(filterBy) {
     try {
         const aggregation = _buildTasksAggregation(filterBy)
         const collection = await dbService.getCollection('board')
         const tasks = await collection.aggregate(aggregation).toArray()
-        // console.log('tasks from taskService:', tasks)
         return tasks
     } catch (err) {
         logger.error('cannot find tasks', err)
@@ -35,24 +35,25 @@ module.exports = {
 }
 
 function _buildTasksAggregation(filterBy) {
-    let aggregation = []
-    // console.log('filterBy from taskService:', filterBy)
 
-    if (filterBy?.boardId) aggregation.push(
-        { '$match': { '_id': { '$eq': ObjectId(filterBy.boardId) } } }
-    )
-    aggregation.push(
+    const aggregation = [
         { '$project': { '_id': 0, 'groups': 1 } },
         { '$unwind': { 'path': '$groups' } },
         { '$project': { 'tasks': '$groups.tasks' } },
         { '$unwind': { 'path': '$tasks' } }
-    )
-    if (filterBy?.userId) aggregation.push(
-        { '$match': { 'tasks.memberIds': { '$in': [filterBy.userId, 'tasks.memberIds'] } } }
-    )
-    aggregation.push(
-        { '$replaceRoot': { 'newRoot': '$tasks' } }
-    )
+    ]
+
+    if (filterBy?.boardId) aggregation.unshift({
+        '$match': { '_id': { '$eq': ObjectId(filterBy.boardId) } }
+    })
+
+    if (filterBy?.userId) aggregation.push({
+        '$match': { 'tasks.memberIds': { '$in': [filterBy.userId, 'tasks.memberIds'] } }
+    })
+
+    aggregation.push({
+        '$replaceRoot': { 'newRoot': '$tasks' }
+    })
 
     return aggregation
 }
