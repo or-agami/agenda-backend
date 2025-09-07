@@ -40,9 +40,14 @@ async function remove(boardId) {
 async function add(board) {
     try {
         const collection = await dbService.getCollection('board')
-        board.style = 'clr' + utilService.getRandomIntInclusive(1, 17)
-        board.cmpsOrder = ["member", "status", "priority", "timeline", "attachments"]
-        board.groups = [{ id: utilService.makeId(), title: 'Group 1', tasks: [] }]
+        // Respect provided fields; only set defaults when not provided
+        if (!board.style) board.style = 'clr' + utilService.getRandomIntInclusive(1, 17)
+        if (!board.cmpsOrder || board.cmpsOrder.length === 0) {
+            board.cmpsOrder = ["member", "status", "priority", "timeline", "attachments"]
+        }
+        if (!board.groups || board.groups.length === 0) {
+            board.groups = [{ id: utilService.makeId(), title: 'Group 1', tasks: [] }]
+        }
         await collection.insertOne(board)
         return board
     } catch (err) {
